@@ -1,0 +1,3 @@
+splynx ansible_host=192.168.100.230 ansible_connection=ssh ansible_user=splynx-admin ansible_ssh_pass=q1w2e3r4t5 ansible_sudo_pass=q1w2e3r4t5
+niks ansible_host=139.59.210.202 ansible_connection=ssh ansible_user=root  
+target ansible_host=164.90.219.223 ansible_connection=ssh ansible_user=root ansible_ssh_pass=DliQmCjI0KF4sL2ry5PmkJM4LIjEAfiz

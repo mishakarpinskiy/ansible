@@ -1,0 +1,13 @@
+-
+    name: Set/change license code
+    hosts: all
+    gather_facts: False
+    become: yes
+
+    tasks:
+        -
+            name: Setup license
+            ansible.builtin.lineinfile:
+              path: /var/www/splynx/config/config1.php
+              regexp: '^license='
+              line: license=q1w2e3r4t5y6u7i8o9p0

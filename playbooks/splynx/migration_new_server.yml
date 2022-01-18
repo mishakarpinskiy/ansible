@@ -1,0 +1,64 @@
+-
+    name: New server. Copy&replace Splynx files
+    hosts: splynx
+    become: yes
+    vars:
+        splynx_folder: "/var/www/splynx/"      #with first "/" and without last "/"
+        backup_files: "/tmp/migrate-files"  #with first "/" and without last "/"
+
+    tasks:
+        -
+            name: 'move addons, templates, uploads folders'
+            copy:
+              src: "{{backup_files}}/{{item}}"
+              dest: "{{splynx_folder}}"
+              remote_src: yes
+              owner: splynx
+              group: splynx
+            loop:
+              - addons
+              - templates
+              - uploads
+
+        -
+            name: 'move rrd and handlers folders to system'
+            copy:
+              src: "{{backup_files}}/{{item}}"
+              dest: "{{splynx_folder}}/system"
+              remote_src: yes
+              owner: splynx
+              group: splynx
+            loop:
+              - rrd
+              - external_handlers
+
+        -
+            name: 'move config files(encrypt + config)'
+            copy:
+              src: "{{backup_files}}/config/{{item}}"
+              dest: "{{splynx_folder}}/config"
+              remote_src: yes
+              owner: splynx
+              group: splynx
+            loop:
+              - config.php
+              - encrypt.php
+
+        -
+            name: 'move web/uploads'
+            copy:
+              src: "{{backup_files}}/web/uploads"
+              dest: "{{splynx_folder}}/web"
+              remote_src: yes
+              owner: splynx
+              group: splynx
+
+        -
+            name: 'sync  addons, templates, uploads folders'
+            synchronize:
+              src: "{{backup_files}}/{{item}}"
+              dest: "{{splynx_folder}}"
+            loop:
+              - addons
+              - templates
+              - uploads

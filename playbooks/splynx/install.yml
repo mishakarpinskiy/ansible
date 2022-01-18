@@ -1,0 +1,61 @@
+-
+    name: Install Splynx 3.1
+    hosts: all
+    gather_facts: False
+    become: yes
+    vars:
+      admin_pass: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=8') }}"
+      splynx_pass: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=8') }}"
+
+    tasks:
+        -
+             name: Update Timezone
+             timezone:
+               name: "{{timezone}}"
+
+        -
+            name: "Add Splynx's source list"
+            #ansible.builtin.apt_repository:
+            #  repo: deb https://deb.splynx.com/ splynx splynx3_1
+            #  state: present
+            shell: wget -qO- https://deb.splynx.com/setup_3_1| bash -
+        -
+            name: Install splynx 3.1
+            ansible.builtin.package:
+              name: splynx-7.4
+              state: present
+
+        -
+            name: set&output splynx password
+            shell: /var/www/splynx/system/script/passwd admin --login=splynx --password={{splynx_pass}}
+            register: result_splynx
+
+        -
+            name: set&output admin password
+            shell: /var/www/splynx/system/script/passwd admin --login=admin --password={{admin_pass}}
+            register: result_admin
+
+        -   debug:
+              msg:
+                - "{{ result_splynx.stdout}}"
+                - "{{ result_admin.stdout}}"
+
+        -
+            name: Setup license
+            ansible.builtin.lineinfile:
+              path: /var/www/splynx/config/config.php
+              regexp: '^license'
+              line: license="{{license_code}}"
+
+        -   name: dpkg-reconfigure splynx
+            command: dpkg-reconfigure -f noninteractive splynx-7.4
+
+        -
+            name: Install splynx-remote-support
+            ansible.builtin.package:
+              name: splynx-remote-support
+              state: present
+
+        -   name: Wait until the file /etc/burp/splynx.conf is present before continuing
+            wait_for:
+              path: /etc/burp/splynx.conf

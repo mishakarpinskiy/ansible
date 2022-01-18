@@ -1,0 +1,54 @@
+---
+  - hosts: all
+    gather_facts: false
+    tasks:
+      #run commands, register disk,RAM,CPU usages
+      -
+        name: 'Get disk usage'
+        shell: "df -hT /"
+        register: disk_usage
+      -
+        name: 'Get CPU usage + system info'
+        shell: "top -b -n 1 | head -n3"
+        register: cpu_usage
+
+      -
+        name: 'Get RAM usage'
+        shell: "free -h"
+        register: ram_usage
+      # end of registration
+      #start set facts for disk,RAM,CPU usages
+      -
+        name: Set disk usage facts
+        set_fact:
+          disk_free_space: "{{disk_usage}}"
+
+      -
+        name: Set CPU usage facts
+        set_fact:
+          cpu: "{{cpu_usage}}"
+
+      -
+        name: Set RAM usage facts
+        set_fact:
+          ram: "{{ram_usage}}"
+
+      #end of facts set
+      #start output
+      -
+        name: Output disk usage facts
+        debug:
+          msg:
+            - "*** Disk usage:"
+            - "{{disk_free_space.stdout_lines.0}}"
+            - "{{disk_free_space.stdout_lines.1}}"
+            - "\n*** CPU usage, uptime:"
+            - "{{cpu.stdout_lines.0}}"
+            - "{{cpu.stdout_lines.1}}"
+            - "{{cpu.stdout_lines.2}}"
+            - "\n*** RAM usage:"
+            - "{{ram.stdout_lines.0}}"
+            - "{{ram.stdout_lines.1}}"
+            - "{{ram.stdout_lines.2}}"
+
+...

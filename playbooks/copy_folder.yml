@@ -1,0 +1,26 @@
+-
+    name: Test copy folder and replace files
+    hosts: target
+    vars:
+        production: "/home/ubuntu/project"
+        backup: "/home/ubuntu/project_backup"
+
+    tasks:
+        -
+            name: 'copy addons folder from backup to original folder'
+            copy:
+              src: "{{backup}}/addons"
+              dest: "{{production}}"
+              remote_src: yes
+              owner: splynx
+              group: splynx
+            become: yes
+        -
+            name: 'copy logs folder from backup to original folder'
+            copy:
+              src: "{{backup}}/logs"
+              dest: "{{production}}"
+              remote_src: yes
+              owner: splynx
+              group: splynx
+            become: yes

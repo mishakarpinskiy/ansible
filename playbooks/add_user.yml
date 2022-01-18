@@ -1,0 +1,10 @@
+-
+    name: 'Execute a script on all web server nodes and start httpd service'
+    hosts: web_nodes
+    tasks:
+        -
+            name: 'add user'
+            user:
+              name: web_user
+              uid: 1040
+              group: developers

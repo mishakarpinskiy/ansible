@@ -1,0 +1,134 @@
+-
+# playbook to automate deployment of an app
+# https://github.com/kodekloudhub/learning-app-ecommerce/blob/master/README.md
+  name: deploy app
+  hosts: target
+  become: yes
+  tasks:
+#firewalld install, start, enable
+    -
+      name: install firewalld
+      apt: name=firewalld state=present
+
+    -
+      name: Start the firewalld service
+      service: name=firewalld state=started
+
+    -
+      name: Systemctl enable firewalld
+      systemd: name=firewalld state=started
+
+#mariadb install, start, enable and configure firewall for port 3306/tcp
+    -
+      name: install mariadb-server
+      apt: name=mariadb-server state=present
+
+    -
+      name: Start the mariadb service
+      service: name=mariadb state=started
+
+    -
+      name: Systemctl enable mariadb
+      systemd: name=mariadb state=started
+
+    -
+      name: configure firwall for mariadb
+      firewalld:
+        port: 3306/tcp
+        zone: public
+        permanent: yes
+        state: enabled
+
+    -
+      name: reload firewalld
+      systemd: name=firewalld state=reloaded
+
+#create database, create user, grant all privileges, flush privileges
+
+    -
+      name: create database 'ecomdb'
+      mysql_db:
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        name: ecomdb
+        state: present
+
+    -
+      name: create user 'ecomuser' with all privileges
+      mysql_user:
+          login_unix_socket: /var/run/mysqld/mysqld.sock
+          state: present
+          name: ecomuser
+          password: ecompassword
+          priv:
+            "ecomdb.*:ALL,GRANT"
+
+# create file with contect for database
+    -
+      name: create .sql file with content
+      copy:
+        dest: /home/ubuntu/db1.sql
+        content: |
+          USE ecomdb;
+          CREATE TABLE products (id mediumint(8) unsigned NOT NULL auto_increment,Name varchar(255) default NULL,Price varchar(255) default NULL, ImageUrl varchar(255) default NULL,PRIMARY KEY (id)) AUTO_INCREMENT=1;
+          INSERT INTO products (Name,Price,ImageUrl) VALUES ("Laptop","100","c-1.png"),("Drone","200","c-2.png"),("VR","300","c-3.png"),("Tablet","50","c-5.png"),("Watch","90","c-6.png"),("Phone Covers","20","c-7.png"),("Phone","80","c-8.png"),("Laptop","150","c-4.png");
+
+# import sql file into database    -
+    -
+      name: import sql
+      mysql_db:
+        name: ecomdb
+        login_user: ecomuser
+        login_password: ecompassword
+        target: /home/ubuntu/db1.sql
+        state: import
+
+# install and configure httpd
+    -
+      name: install apache, php, php-mysql
+      vars:
+          packages:
+              - apache2
+              - php
+              - php-mysql
+      apt: name={{packages}} state=present
+
+    -
+      name: Start the apache2 service
+      service: name=apache2 state=started
+
+    -
+      name: Systemctl enable apache2
+      systemd: name=apache2 state=started
+
+    -
+      name: configure firwall for apache
+      firewalld:
+          port: 80/tcp
+          zone: public
+          permanent: yes
+          state: enabled
+
+    -
+      name: reload firewalld
+      systemd: name=firewalld state=reloaded
+
+# download code
+
+    -
+      name: install git
+      apt: name=git state=present
+
+    -
+      name: remove var/www/html/index.html
+      file:
+        path: /var/www/html/index.html
+        state: absent
+
+    -
+      name: download code
+      command: git clone https://github.com/kodekloudhub/learning-app-ecommerce.git /var/www/html/
+
+# update index.php file
+    -
+      name: update index.php
+      command: sed -i 's/172.20.1.101/localhost/g' /var/www/html/index.php

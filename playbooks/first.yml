@@ -1,0 +1,6 @@
+-
+  name: first run
+  hosts: all
+  tasks:
+    - name: ping
+      ping:

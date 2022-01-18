@@ -1,0 +1,26 @@
+-
+    name: Update timezone before install
+    hosts: all
+    gather_facts: False
+    become: yes
+
+    tasks:
+#        -
+#            name: "Check timezone"
+#            shell: 'cat /etc/timezone'
+#            register: command_output
+#
+#        - debug: msg="{{ command_output.stdout }}"
+#
+#        -
+#            name: "Compare timezone and change"
+#            shell: 'echo "Africa/Johannesburg" > /etc/timezone'
+#            when: command_output != 'Africa/Johannesburg'
+#
+#        -   name: dpkg-reconfigure
+#            command: dpkg-reconfigure -f Noninteractive tzdata
+
+         -
+              name: Update Timezone
+              timezone:
+                name: "{{timezone}}"
